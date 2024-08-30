@@ -35,6 +35,17 @@ function show(io::IO, v::SymplecticVector{n, d}) where {n, d}
         ]))
 end
 
+# Functions for generating random symplectic vectors
+function rand(rng::AbstractRNG, ::SamplerType{SymplecticVector{n, d}}) where {n, d}
+    FF = finite_field(d)[1]
+    return SymplecticVector{n, d}(rand(FF, n), rand(FF, n))
+end
+
+function rand(rng::AbstractRNG, ::SamplerType{SymplecticVector{n, d}}, dims...) where {n, d}
+    FF = finite_field(d)[1]
+    return SymplecticVector{n, d}.(rand(FF, n, dims...), rand(FF, n, dims...))
+end
+
 # Functions for extracting information from SymplecticVector types
 dimension(v::SymplecticVector{n, d}) where {n, d} = 2n
 halfdimension(v::SymplecticVector{n, d}) where {n, d} = n

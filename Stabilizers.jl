@@ -20,6 +20,10 @@ function Pauli(a::SymplecticVector{n, d}, ϕ::T) where {n, d, T<:Integer}
     return Pauli{n, d}(a, FF(ϕ))
 end
 
+function Pauli(a::SymplecticVector{n, d}) where {n, d}
+    return Pauli{n, d}(a, 0)
+end
+
 
 ## Basic operations on Pauli types
 function compose(P::Pauli{n, d}, Q::Pauli{n, d}) where {n, d}

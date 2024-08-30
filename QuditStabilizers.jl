@@ -8,6 +8,7 @@ using Kronecker
 using Nemo
 
 import Base: (==), (+), (-), (*), hash, isequal, iszero, show, rand, zero
+import Random: AbstractRNG, SamplerType
 
 export SymplecticVector, SymplecticSubspace
 export dimension, halfdimension, data
