@@ -13,7 +13,11 @@ export SymplecticVector, SymplecticSubspace
 export dimension, halfdimension, data
 export innerproduct, ⋅, symplecticform, ⋆
 
+export Pauli
+export compose, *, operator
+
 include("Symplectic.jl")
+include("Stabilizers.jl")
 
 end
 # End module
