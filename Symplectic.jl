@@ -28,9 +28,9 @@ end
 function show(io::IO, v::SymplecticVector{n, d}) where {n, d}
     print(io, reduce(*, [
             "[",
-            join(permutedims(hcat(string.(v.z[:,1]), repeat([" ", n])))[:])[1:end-1],
+            join(permutedims(hcat(string.(v.z[:,1]), repeat([" "], n)))[:])[1:end-1],
             "|",
-            join(permutedims(hcat(string.(v.x[:,1]), repeat([" ", n])))[:])[1:end-1],
+            join(permutedims(hcat(string.(v.x[:,1]), repeat([" "], n)))[:])[1:end-1],
             "]"
         ]))
 end

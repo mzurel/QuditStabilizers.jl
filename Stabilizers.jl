@@ -24,6 +24,26 @@ function Pauli(a::SymplecticVector{n, d}) where {n, d}
     return Pauli{n, d}(a, 0)
 end
 
+function show(io::IO, P::Pauli{n, d}) where {n, d}
+    print(io, (P.a, P.ϕ))
+end
+
+function hash(P::Pauli{n, d}) where {n, d}
+    return hash((P.ϕ, P.a))
+end
+
+# Functions for generating random Paulis
+function rand(rng::AbstractRNG, ::SamplerType{Pauli{n, d}}) where {n, d}
+    FF = finite_field(d)[1]
+    return Pauli{n, d}(rand(SymplecticVector{n, d}), rand(FF))
+end
+
+function rand(rng::AbstractRNG, ::SamplerType{Pauli{n, d}}, dims...) where {n, d}
+    FF = finite_field(d)[1]
+    return Pauli{n, d}.(rand(SymplecticVector{n, d}, dims...), rand(FF, dims...))
+end
+
+
 
 ## Basic operations on Pauli types
 function compose(P::Pauli{n, d}, Q::Pauli{n, d}) where {n, d}
