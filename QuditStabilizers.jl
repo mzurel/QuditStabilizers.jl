@@ -14,6 +14,9 @@ export SymplecticVector, SymplecticSubspace
 export dimension, halfdimension, data
 export innerproduct, ⋅, symplecticform, ⋆
 
+export Subspace, IsotropicSubspace, LagrangianSubspace
+export islinearlyindependent, isisotropic
+
 export Pauli
 export compose, *, operator
 

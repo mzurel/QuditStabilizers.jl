@@ -1,6 +1,6 @@
-####################################
-##  Types for symplectic vectors  ##
-####################################
+################################################
+##  Types and methods for symplectic vectors  ##
+################################################
 
 abstract type AbstractSymplecticVector end
 
@@ -62,9 +62,102 @@ halfdimension(v::SymplecticVector{n, d}) where {n, d} = n
 function innerproduct(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
     (transpose(u.z) * v.z + transpose(u.x) * v.x)[1]
 end
-⋅ = innerproduct
+⋅(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d} = innerproduct(u, v)
 
 function symplecticform(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
     (transpose(u.z) * v.x - transpose(u.x) * v.z)[1]
 end
 ⋆ = symplecticform
+
+
+###################################################################
+##  Types and methods for subspaces of symplectic vector spaces  ##
+###################################################################
+
+function islinearlyindependent(vectors::Vector{SymplecticVector{n, d}}) where {n, d}
+    M = transpose(vcat(
+        hcat(collect(vectors[i].z for i ∈ 1:length(vectors))...),
+        hcat(collect(vectors[i].x for i ∈ 1:length(vectors))...)
+        ))
+    r, A = rref(M)
+    if length(vectors) == r
+        return true
+    else
+        return false
+    end
+end
+
+function isisotropic(vectors::Vector{SymplecticVector{n, d}}) where {n, d}
+    for i ∈ 1:length(vectors)
+        for j ∈ (i+1):length(vectors)
+            if !iszero(vectors[i] ⋆ vectors[j])
+                return false
+            end
+        end
+    end
+    return true
+end
+
+abstract type AbstractSubspace end
+
+struct Subspace{n, d} <: AbstractSubspace
+    basis::Vector{SymplecticVector{n, d}}
+    function Subspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
+        if check
+            if !islinearlyindependent(basis)
+                error("Basis is not linearly independent")
+            end
+        end
+        new(basis)
+    end
+end
+
+function Subspace(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
+    return Subspace{n, d}(basis, check=check)
+end
+
+struct IsotropicSubspace{n, d} <: AbstractSubspace
+    basis::Vector{SymplecticVector{n, d}}
+    function IsotropicSubspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
+        if check
+            if !isisotropic(basis)
+                error("Subspace is not isotropic")
+            end
+            if !islinearlyindependent(basis)
+                error("Basis is not linearly independent")
+            end
+        end
+        new(basis)
+    end
+end
+
+function IsotropicSubspace(basis::Vector{SymplecticVector{n, d}}, check::Bool=true) where {n, d}
+    return IsotropicSubspace{n, d}(basis, check=check)
+end
+
+struct LagrangianSubspace{n, d} <: AbstractSubspace
+    basis::Vector{SymplecticVector{n, d}}
+    function LagrangianSubspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
+        if check
+            if length(basis) ≠ n
+                error("Not enough basis vectors")
+            end
+            if !isisotropic(basis)
+                error("Subspace is not isotropic")
+            end
+            if !islinearlyindependent(basis)
+                error("Basis is not linearly independent")
+            end
+        end
+        new(basis)
+    end
+end
+
+function LagrangianSubspace(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
+    return LagrangianSubspace{n, d}(basis, check=check)
+end
+
+function dimension(subspace::T) where {T<:AbstractSubspace}
+    return length(subspace.basis)
+end
+
