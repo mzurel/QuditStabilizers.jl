@@ -12,13 +12,16 @@ import Random: AbstractRNG, SamplerType
 
 export SymplecticVector, SymplecticSubspace
 export dimension, halfdimension, data
-export innerproduct, ⋅, symplecticform, ⋆
+export innerproduct, (⋅), symplecticform, (⋆)
 
 export Subspace, IsotropicSubspace, LagrangianSubspace
 export islinearlyindependent, isisotropic
 
+export SymplecticMap
+export symplecticgrouporder, issymplectic, symplecticmap, (*)
+
 export Pauli
-export compose, *, operator
+export compose, operator
 
 include("Symplectic.jl")
 include("Stabilizers.jl")

@@ -161,3 +161,80 @@ function dimension(subspace::T) where {T<:AbstractSubspace}
     return length(subspace.basis)
 end
 
+
+#############################################
+##  Types and methods for symplectic maps  ##
+#############################################
+
+function symplecticgrouporder(n, d)
+    order = BigInt(d)^(n^2)
+    for k ∈ 1:n
+        order *= BigInt(d)^(2k) - 1
+    end
+    if order ≤ typemax(Int64)
+        return Int64(order)
+    elseif order ≤ typemax(Int128)
+        return Int128(order)
+    end
+    return order
+end
+
+function issymplectic(z::Vector{SymplecticVector{n, d}}, x::Vector{SymplecticVector{n, d}}) where {n, d}
+    for i ∈ 1:n
+        for j ∈ (i+1):n
+            if !iszero(z[i] ⋆ z[j]) || !iszero(x[i] ⋆ x[j])
+                return false
+            end
+        end
+    end
+    for i ∈ 1:n
+        for j ∈ 1:n
+            if i == j
+                if !isone(z[i] ⋆ x[j])
+                    return false
+                end
+            else
+                if !iszero(z[i] ⋆ x[j])
+                    return false
+                end
+            end
+        end
+    end
+    return true
+end
+
+abstract type AbstractSymplecticMap end
+
+struct SymplecticMap{n, d}
+    z_image::Vector{SymplecticVector{n, d}}
+    x_image::Vector{SymplecticVector{n, d}}
+    function SymplecticMap{n, d}(z_image, x_image; check::Bool=true) where {n, d}
+        if check
+            if length(z_image) ≠ n || length(x_image) ≠ n
+                error("Nonsquare matrix")
+            end
+            if !issymplectic(z_image, x_image)
+                error("Map is not symplectic")
+            end
+        end
+
+        new(z_image, x_image)
+    end
+end
+
+function symplecticmap(map::SymplecticMap{n, d}, v::SymplecticVector{n, d}) where {n, d}
+    matrix = hcat(
+        vcat(
+            hcat(collect(map.z_image[i].z for i ∈ 1:n)...),
+            hcat(collect(map.z_image[i].x for i ∈ 1:n)...)
+        ),
+        vcat(
+            hcat(collect(map.x_image[i].z for i ∈ 1:n)...),
+            hcat(collect(map.x_image[i].x for i ∈ 1:n)...)
+        )
+    )
+    data = Array(matrix * vcat(v.z, v.x))
+    return SymplecticVector{n, d}(data[1:n], data[(n+1):2n])
+end
+
+*(map::SymplecticMap{n, d}, v::SymplecticVector{n, d}) where {n, d} = symplecticmap(map, v)
