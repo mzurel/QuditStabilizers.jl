@@ -17,8 +17,9 @@ export innerproduct, (⋅), symplecticform, (⋆)
 export Subspace, IsotropicSubspace, LagrangianSubspace
 export islinearlyindependent, isisotropic
 
-export SymplecticMap
-export symplecticgrouporder, issymplectic, symplecticmap, (*)
+export SymplecticMap, Transvection
+export symplecticgrouporder, issymplectic, symplecticmap, (*), transvection
+
 
 export Pauli
 export compose, operator

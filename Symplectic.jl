@@ -208,7 +208,7 @@ abstract type AbstractSymplecticMap end
 struct SymplecticMap{n, d}
     z_image::Vector{SymplecticVector{n, d}}
     x_image::Vector{SymplecticVector{n, d}}
-    function SymplecticMap{n, d}(z_image, x_image; check::Bool=true) where {n, d}
+    function SymplecticMap{n, d}(z_image::Vector{SymplecticVector{n, d}}, x_image::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
         if check
             if length(z_image) ≠ n || length(x_image) ≠ n
                 error("Nonsquare matrix")
@@ -220,6 +220,10 @@ struct SymplecticMap{n, d}
 
         new(z_image, x_image)
     end
+end
+
+function SymplecticMap(z_image::Vector{SymplecticVector{n, d}}, x_image::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
+    return SymplecticMap{n, d}(z_image, x_image; check=check)
 end
 
 function symplecticmap(map::SymplecticMap{n, d}, v::SymplecticVector{n, d}) where {n, d}
@@ -238,3 +242,26 @@ function symplecticmap(map::SymplecticMap{n, d}, v::SymplecticVector{n, d}) wher
 end
 
 *(map::SymplecticMap{n, d}, v::SymplecticVector{n, d}) where {n, d} = symplecticmap(map, v)
+
+
+# Transvections
+struct Transvection{n, d}
+    h::SymplecticVector{n, d}
+    function Transvection{n, d}(h::SymplecticVector{n, d}) where {n, d}
+        new(h)
+    end
+end
+
+function Transvection(h::SymplecticVector{n, d}) where {n, d}
+    return Transvection{n, d}(h)
+end
+
+function transvection(h::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d}
+    return v + ((v ⋆ h) * h)
+end
+
+*(h::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d} = transvection(h, v)
+
+function transvection(h::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
+    return transvection(Transvection(h), v)
+end
