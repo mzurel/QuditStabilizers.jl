@@ -4,6 +4,36 @@
 
 abstract type AbstractSymplecticVector end
 
+"""
+    SymplecticVector{n, d}(z::FqMatrix, x::FqMatrix)
+
+Construct a symplectic vector over ``ℤₚ`` (p=d) with `z` and `x` components as `FqMatrix` objects.
+
+# Arguments
+- `z::FqMatrix`: The first component of the symplectic vector.
+- `x::FqMatrix`: The second component of the symplectic vector.
+
+# Example
+```jldoctest
+julia> FF = finite_field(3)[1]
+Prime field of characteristic 3
+
+julia> MM = matrix_space(FF, 2, 1)
+Matrix space of 2 rows and 1 column
+  over prime field of characteristic 3
+
+julia> z = MM([1;2])
+[1]
+[2]
+
+julia> x = MM([2;0])
+[2]
+[0]
+
+julia> v = SymplecticVector{2, 3}(z, x)
+[1 2|2 0]
+```
+"""
 struct SymplecticVector{n, d} <: AbstractSymplecticVector
     z::FqMatrix
     x::FqMatrix
@@ -12,19 +42,41 @@ struct SymplecticVector{n, d} <: AbstractSymplecticVector
     end
 end
 
-# Outer constructor accepting integers and converting them to finite field elements
+"""
+    SymplecticVector{n, d}(z::Array, x::Array)
+
+Outer constructor for a symplectic vector with `z` and `x` components provided as `Array`
+objects, automatically converting them to `FqMatrix` objects over the finite field `F_q`.
+
+# Example
+```jldoctest
+julia> v = SymplecticVector{2, 3}([1,2], [2,0])
+[1 2|2 0]
+```
+"""
 function SymplecticVector{n, d}(z::Array, x::Array) where {n, d}
     FF = finite_field(d)[1]
     MM = matrix_space(FF, n, 1)
     return SymplecticVector{n, d}(MM(z), MM(x))
 end
 
-# Overloading builtin functions for SymplecticVector types
+
+# Basic operations on symplectic vectors
+
+"""
+    hash(v::SymplecticVector{n, d}) -> UInt
+
+Compute a hash for the given `SymplecticVector`.
+"""
 function hash(v::SymplecticVector{n, d}) where {n, d}
     return hash((v.z, v.x))
 end
 
-# Printing SymplecticVectors
+"""
+    show(io::IO, v::SymplecticVector{n, d})
+
+Print a clean representation of the `SymplecticVector` to the IO stream.
+"""
 function show(io::IO, v::SymplecticVector{n, d}) where {n, d}
     print(io, reduce(*, [
             "[",
@@ -35,22 +87,51 @@ function show(io::IO, v::SymplecticVector{n, d}) where {n, d}
         ]))
 end
 
-# Functions for generating random symplectic vectors
+"""
+    rand(rng::AbstractRNG, ::SamplerType{SymplecticVector{n, d}}) -> SymplecticVector{n, d}
+
+Generate a random symplectic vector using the given random number generator.
+"""
 function rand(rng::AbstractRNG, ::SamplerType{SymplecticVector{n, d}}) where {n, d}
     FF = finite_field(d)[1]
     return SymplecticVector{n, d}(rand(FF, n), rand(FF, n))
 end
 
+"""
+    rand(rng::AbstractRNG, ::SamplerType{SymplecticVector{n, d}}, dims...) -> Array{SymplecticVector{n, d}}
+
+Generate an array of random symplectic vectors with the specified dimensions using the given random number generator.
+"""
 function rand(rng::AbstractRNG, ::SamplerType{SymplecticVector{n, d}}, dims...) where {n, d}
     FF = finite_field(d)[1]
     return SymplecticVector{n, d}.(rand(FF, n, dims...), rand(FF, n, dims...))
 end
 
+
 # Functions for extracting information from SymplecticVector types
+
+"""
+    dimension(v::SymplecticVector{n, d}) -> Int
+
+Return the dimension (2n) of the symplectic vector.
+"""
 dimension(v::SymplecticVector{n, d}) where {n, d} = 2n
+
+"""
+    halfdimension(v::SymplecticVector{n, d}) -> Int
+
+Return the half-dimension (n) of the symplectic vector.
+"""
 halfdimension(v::SymplecticVector{n, d}) where {n, d} = n
 
+
 # Basic arithmetic with symplectic vectors
+
+"""
+    zero(::Type{SymplecticVector{n, d}}) -> SymplecticVector{n, d}
+
+Return the zero symplectic vector.
+"""
 function zero(::Type{SymplecticVector{n, d}}) where {n, d}
     FF = finite_field(d)[1]
     return SymplecticVector{n, d}(repeat([zero(FF)], n), repeat([zero(FF)], n))
@@ -70,11 +151,21 @@ end
 *(k::FqFieldElem, v::SymplecticVector{n, d}) where {n, d} = SymplecticVector{n, d}(k * v.z, k * v.x)
 *(v::SymplecticVector{n, d}, k::FqFieldElem) where {n, d} = SymplecticVector{n, d}(k * v.z, k * v.x)
 
-function innerproduct(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
+"""
+    dotproduct(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) -> FqFieldElem
+
+Compute the dot product of two symplectic vectors.
+"""
+function dotproduct(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
     (transpose(u.z) * v.z + transpose(u.x) * v.x)[1]
 end
 ⋅(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d} = innerproduct(u, v)
 
+"""
+    symplecticform(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) -> FqFieldElem
+
+Compute the symplectic form of two symplectic vectors.
+"""
 function symplecticform(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
     (transpose(u.z) * v.x - transpose(u.x) * v.z)[1]
 end
@@ -85,6 +176,11 @@ end
 ##  Types and methods for subspaces of symplectic vector spaces  ##
 ###################################################################
 
+"""
+    islinearlyindependent(vectors::Vector{SymplecticVector{n, d}}) -> Bool
+
+Check if a set of symplectic vectors is linearly independent.
+"""
 function islinearlyindependent(vectors::Vector{SymplecticVector{n, d}}) where {n, d}
     M = transpose(vcat(
         hcat(collect(vectors[i].z for i ∈ 1:length(vectors))...),
@@ -98,6 +194,11 @@ function islinearlyindependent(vectors::Vector{SymplecticVector{n, d}}) where {n
     end
 end
 
+"""
+    isisotropic(vectors::Vector{SymplecticVector{n, d}}) -> Bool
+
+Check if a set of symplectic vectors forms an isotropic subspace.
+"""
 function isisotropic(vectors::Vector{SymplecticVector{n, d}}) where {n, d}
     for i ∈ 1:length(vectors)
         for j ∈ (i+1):length(vectors)
@@ -109,8 +210,15 @@ function isisotropic(vectors::Vector{SymplecticVector{n, d}}) where {n, d}
     return true
 end
 
+
 abstract type AbstractSubspace end
 
+"""
+    Subspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true)
+
+Construct a subspace of a symplectic vector space with the provided basis.
+Checks for linear independence of the basis vectors if `check=true`.
+"""
 struct Subspace{n, d} <: AbstractSubspace
     basis::Vector{SymplecticVector{n, d}}
     function Subspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
@@ -127,6 +235,12 @@ function Subspace(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where
     return Subspace{n, d}(basis, check=check)
 end
 
+"""
+    IsotropicSubspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true)
+
+Construct an isotropic subspace of a symplectic vector space with the provided basis.
+Checks for isotropy and linear independence of the basis vectors if `check=true`.
+"""
 struct IsotropicSubspace{n, d} <: AbstractSubspace
     basis::Vector{SymplecticVector{n, d}}
     function IsotropicSubspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
@@ -146,6 +260,12 @@ function IsotropicSubspace(basis::Vector{SymplecticVector{n, d}}, check::Bool=tr
     return IsotropicSubspace{n, d}(basis, check=check)
 end
 
+"""
+    LagrangianSubspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true)
+
+Construct a Lagrangian subspace of a symplectic vector space with the provided basis.
+Checks for isotropy, linear independence, and that the dimension is `n` if `check=true`.
+"""
 struct LagrangianSubspace{n, d} <: AbstractSubspace
     basis::Vector{SymplecticVector{n, d}}
     function LagrangianSubspace{n, d}(basis::Vector{SymplecticVector{n, d}}; check::Bool=true) where {n, d}
