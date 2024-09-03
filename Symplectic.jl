@@ -51,6 +51,17 @@ dimension(v::SymplecticVector{n, d}) where {n, d} = 2n
 halfdimension(v::SymplecticVector{n, d}) where {n, d} = n
 
 # Basic arithmetic with symplectic vectors
+function zero(::Type{SymplecticVector{n, d}}) where {n, d}
+    FF = finite_field(d)[1]
+    return SymplecticVector{n, d}(repeat([zero(FF)], n), repeat([zero(FF)], n))
+end
+
+function zero(::SymplecticVector{n, d}) where {n, d}
+    FF = finite_field(d)[1]
+    return SymplecticVector{n, d}(repeat([zero(FF)], n), repeat([zero(FF)], n))
+end
+
+
 ==(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d} = (u.z == v.z) && (u.x == v.x)
 
 +(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d} = SymplecticVector{n, d}(u.z+v.z, u.x+v.x)
@@ -247,21 +258,32 @@ end
 # Transvections
 struct Transvection{n, d}
     h::SymplecticVector{n, d}
-    function Transvection{n, d}(h::SymplecticVector{n, d}) where {n, d}
-        new(h)
+    λ::FqFieldElem
+    function Transvection{n, d}(h::SymplecticVector{n, d}, λ::FqFieldElem) where {n, d}
+        new(h, λ)
     end
 end
 
-function Transvection(h::SymplecticVector{n, d}) where {n, d}
-    return Transvection{n, d}(h)
+function Transvection{n, d}(h::SymplecticVector{n, d}, λ::T) where {n, d, T<:Integer}
+    FF = finite_field(d)[1]
+    return Transvection{n, d}(h, FF(λ))
 end
 
-function transvection(h::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d}
-    return v + ((v ⋆ h) * h)
+function Transvection(h::SymplecticVector{n, d}, λ) where {n, d}
+    return Transvection{n, d}(h, λ)
+end
+
+function Transvection(h::SymplecticVector{n, d}) where {n, d}
+    return Transvection{n, d}(h, 0)
+end
+
+
+function transvection(t::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d}
+    return v + (t.λ * (v ⋆ t.h) * t.h)
+end
+
+function transvection(h::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
+    return transvection(Transvection(h, 0), v)
 end
 
 *(h::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d} = transvection(h, v)
-
-function transvection(h::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
-    return transvection(Transvection(h), v)
-end
