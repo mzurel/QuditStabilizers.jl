@@ -336,6 +336,17 @@ end
 
 abstract type AbstractSymplecticMap end
 
+"""
+    SymplecticMap{n, d}(z_image::Vector{SymplecticVector{n, d}}, x_image::Vector{SymplecticVector{n, d}}; check::Bool=true)
+
+Construct a symplectic map from images of the symplectic basis vectors.
+Checks if the map is symplectic if `check=true`.
+
+# Arguments
+    z_image::Vector{SymplecticVector{n, d}}: Vector of images for the z components.
+    x_image::Vector{SymplecticVector{n, d}}: Vector of images for the x components.
+    check::Bool=true: Whether to check if the map is symplectic.
+"""
 struct SymplecticMap{n, d}
     z_image::Vector{SymplecticVector{n, d}}
     x_image::Vector{SymplecticVector{n, d}}
@@ -357,6 +368,15 @@ function SymplecticMap(z_image::Vector{SymplecticVector{n, d}}, x_image::Vector{
     return SymplecticMap{n, d}(z_image, x_image; check=check)
 end
 
+"""
+    symplecticmap(map::SymplecticMap{n, d}, v::SymplecticVector{n, d})
+
+Apply a SymplecticMap to a SymplecticVector, returning the image of the vector.
+
+# Arguments
+    map::SymplecticMap{n, d}: The symplectic map.
+    v::SymplecticVector{n, d}: The vector to be mapped.
+"""
 function symplecticmap(map::SymplecticMap{n, d}, v::SymplecticVector{n, d}) where {n, d}
     matrix = hcat(
         vcat(
@@ -375,7 +395,19 @@ end
 *(map::SymplecticMap{n, d}, v::SymplecticVector{n, d}) where {n, d} = symplecticmap(map, v)
 
 
-# Transvections
+######################################################
+##  Types and methods for symplectic transvections  ##
+######################################################
+
+"""
+    Transvection{n, d}(h::SymplecticVector{n, d}, λ::FqFieldElem)
+
+Construct a `Transvection` from a symplectic vector `h` and a scalar `λ`.
+
+# Arguments
+- `h::SymplecticVector{n, d}`: The symplectic vector that defines the transvection.
+- `λ::FqFieldElem`: The scalar multiplier for the transvection.
+"""
 struct Transvection{n, d}
     h::SymplecticVector{n, d}
     λ::FqFieldElem
@@ -384,26 +416,56 @@ struct Transvection{n, d}
     end
 end
 
+""" Transvection{n, d}(h::SymplecticVector{n, d}, λ::T) where {T<Integer}
+
+Outer constructor for Transvection that accepts an integer λ and converts it to a finite field element.
+
+# Arguments
+ - h::SymplecticVector{n, d}: The symplectic vector that defines the transvection.
+ - λ::T<:Integer: An integer that will be converted to a finite field element.
+"""
 function Transvection{n, d}(h::SymplecticVector{n, d}, λ::T) where {n, d, T<:Integer}
     FF = finite_field(d)[1]
     return Transvection{n, d}(h, FF(λ))
 end
 
+"""
+    Transvection(h::SymplecticVector{n, d}, λ) where {n, d}
+
+Construct a Transvection from a symplectic vector h and a scalar λ. This function is a convenience constructor that infers the type parameters.
+
+# Arguments
+ - h::SymplecticVector{n, d}: The symplectic vector that defines the transvection.
+ - λ: The scalar multiplier for the transvection.
+"""
 function Transvection(h::SymplecticVector{n, d}, λ) where {n, d}
     return Transvection{n, d}(h, λ)
 end
 
+"""
+    Transvection(h::SymplecticVector{n, d}) where {n, d}
+
+If no scalar multipler is given, assume it is 1.
+"""
 function Transvection(h::SymplecticVector{n, d}) where {n, d}
-    return Transvection{n, d}(h, 0)
+    return Transvection{n, d}(h, 1)
 end
 
+"""
+    transvection(t::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d}
 
+Apply a transvection t to a symplectic vector v.
+
+# Arguments
+    t::Transvection{n, d}: The transvection to be applied.
+    v::SymplecticVector{n, d}: The symplectic vector to which the transvection is applied.
+"""
 function transvection(t::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d}
     return v + (t.λ * (v ⋆ t.h) * t.h)
 end
 
 function transvection(h::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
-    return transvection(Transvection(h, 0), v)
+    return transvection(Transvection(h, 1), v)
 end
 
 *(h::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d} = transvection(h, v)
