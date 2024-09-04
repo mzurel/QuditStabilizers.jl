@@ -3,6 +3,7 @@
 ############################################################################################
 module QuditStabilizers
 
+using Base.Iterators
 using LinearAlgebra
 using Kronecker
 using Nemo
@@ -18,7 +19,8 @@ export Subspace, IsotropicSubspace, LagrangianSubspace
 export islinearlyindependent, isisotropic
 
 export SymplecticMap, Transvection
-export symplecticgrouporder, issymplectic, symplecticmap, (*), transvection
+export symplecticgrouporder, issymplectic, symplecticmap, (*)
+export transvection, findtransvection
 
 
 export Pauli

@@ -394,6 +394,18 @@ end
 
 *(map::SymplecticMap{n, d}, v::SymplecticVector{n, d}) where {n, d} = symplecticmap(map, v)
 
+"""
+    symplecticmap(maps::Vector, v)
+
+If a vector of SymplecticMaps `map` is given, the maps are applied to `v` sequentially.
+"""
+function symplecticmap(map::Vector, v)
+    o = v
+    for m ∈ maps
+        o = symplecticmap(m, o)
+    end
+    return o
+end
 
 ######################################################
 ##  Types and methods for symplectic transvections  ##
@@ -469,3 +481,62 @@ function transvection(h::SymplecticVector{n, d}, v::SymplecticVector{n, d}) wher
 end
 
 *(h::Transvection{n, d}, v::SymplecticVector{n, d}) where {n, d} = transvection(h, v)
+
+"""
+    transvection(t::Vector, v)
+
+If a vector of transvections `t` is given, the transvections are applied to `v` sequentially.
+"""
+function transvection(ts::Vector, v)
+    o = v
+    for t ∈ ts
+        o = transvection(t, o)
+    end
+    return o
+end
+
+"""
+    findtransvection(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
+
+Given symplectic vectors `u` and `v`, finds a transvection `t` or a pair of transvections
+`[t₁,t₂]` such that these transvections applied to `u` give `v`.
+"""
+function findtransvection(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d}
+    if u == v
+        return Transvection(zero(SymplecticVector{n, d}))
+    elseif !iszero(u ⋆ v)
+        return Transvection(v - u, inv(u ⋆ v))
+    end
+
+    FF = finite_field(d)[1]
+    for i ∈ 1:n
+        if (!iszero(u.z[i]) || !iszero(u.x[i])) && (!iszero(v.z[i]) || !iszero(v.x[i]))
+            for (a,b) ∈ product(repeat([[FF(0), FF(1)]], 2)...)
+                z = zeros(FF, n); x = zeros(FF, n)
+                z[i] = a; x[i] = b
+                w = SymplecticVector{n, d}(z, x)
+                if !iszero(u ⋆ w) && !iszero(v ⋆ w)
+                    return [Transvection{n, d}(w - u, inv(u ⋆ w)), Transvection{n, d}(v - w, inv(w ⋆ v))]
+                end
+            end
+        end
+    end
+
+    for i ∈ 1:n
+        if !iszero(u.z[i]) || !iszero(u.x[i])
+            for j ∈ 1:n
+                if !iszero(v.z[j]) || !iszero(v.x[j])
+                    for (a₁,b₁,a₂,b₂) ∈ product(repeat([[FF(0), FF(1)]], 4)...)
+                        z = zeros(FF, n); x = zeros(FF, n)
+                        z[i] = a₁; x[i] = b₁
+                        z[j] = a₂; x[j] = b₂
+                        w = SymplecticVector{n, d}(z, x)
+                        if !iszero(u ⋆ w) && !iszero(v ⋆ w)
+                            return [Transvection{n, d}(w - u, inv(u ⋆ w)), Transvection{n, d}(v - w, inv(w ⋆ v))]
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
