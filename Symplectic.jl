@@ -142,6 +142,28 @@ function zero(::SymplecticVector{n, d}) where {n, d}
     return SymplecticVector{n, d}(repeat([zero(FF)], n), repeat([zero(FF)], n))
 end
 
+"""
+    extend(v::SymplecticVector{n, d}, m::Integer) where {n, d} -> SymplecticVector{m + n, d}
+
+Embed a vector ``v∈ℤₚ²ⁿ`` in ``ℤₚ²⁽ᵐ⁺ⁿ⁾``.
+"""
+function extend(v::SymplecticVector{n, d}, m::Integer) where {n, d}
+    MM = matrix_space(finite_field(d)[1], m, 1)
+    return SymplecticVector{m + n, d}(vcat(v.z, zero(MM)), vcat(v.x, zero(MM)))
+end
+
+function extend(v::SymplecticVector{n, d}) where {n, d}
+    return extend(v, 1)
+end
+
+function extendfront(v::SymplecticVector{n, d}, m::Integer) where{n, d}
+    MM = matrix_space(finite_field(d)[1], m, 1)
+    return SymplecticVector{m + n, d}(vcat(zero(MM), v.z), vcat(zero(MM), v.x))
+end
+
+function extendfront(v::SymplecticVector{n, d}) where {n, d}
+    return extendfront(v, 1)
+end
 
 ==(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) where {n, d} = (u.z == v.z) && (u.x == v.x)
 
@@ -538,5 +560,52 @@ function findtransvection(u::SymplecticVector{n, d}, v::SymplecticVector{n, d}) 
                 end
             end
         end
+    end
+end
+
+function SYMPLECTICImproved(n, d, i)
+    FF = finite_field(d)[1]
+    MM = matrix_space(FF, n, 1)
+
+    # Step 1
+    s = BigInt(d)^(2n) - 1
+    k = digits((i % s) + 1, base = d, pad = 2n)
+
+    # Step 2
+    e₁ = SymplecticVector{n, d}(zero(MM) + 1, zero(MM))
+    f₁ = SymplecticVector{n, d}(k[1:n], k[(n+1):2n])
+
+    # Step 3
+    T = findtransvection(e₁, f₁)
+
+    # Step 4
+    b = FF(i ÷ s)
+    b⃗ = digits(i ÷ s, base = d)[2:(2n-1)]
+
+    # Step 5
+    ẽ₁ = zero(MM) + 1
+    ẽ₂ = zero(MM)
+    for j ∈ 2:n
+        ẽ₁[j] = b⃗[2j-3]
+        ẽ₂[j] = b⃗[2j-2]
+    end
+    h₀ = transvection(T, SymplecticVector{n, d}(ẽ₁, ẽ₂))
+
+    # Step 6
+    T̃ = [Transvection(h₀), Transvection(b * f₁)]
+
+    e₂ = SymplecticVector{n, d}(zero(MM), zero(MM) + 1)
+    f₂ = transvection(vcat(T, T̃), e₂)
+
+    # Step 7
+    if n == 1
+        return SymplecticMap{n, d}([f₁], [f₂])
+    else
+        B₍ₙ₋₁₎ = SYMPLECTICImproved(n-1, d, BigInt(floor((i ÷ s) / BigInt(d)^(2n-1))))
+        Bₙ = SymplecticMap{n, d}(
+            [transvection(vcat(T, T̃), v) for v ∈ [e₁, extendfront.(B₍ₙ₋₁₎.z_image)...]],
+            [transvection(vcat(T, T̃), v) for v ∈ [e₂, extendfront.(B₍ₙ₋₁₎.x_image)...]]
+        )
+        return Bₙ
     end
 end

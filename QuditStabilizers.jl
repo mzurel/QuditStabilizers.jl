@@ -12,7 +12,7 @@ import Base: (==), (+), (-), (*), hash, isequal, iszero, show, rand, zero
 import Random: AbstractRNG, SamplerType
 
 export SymplecticVector, SymplecticSubspace
-export dimension, halfdimension, data
+export dimension, halfdimension, data, extend, extendfront
 export innerproduct, (⋅), symplecticform, (⋆)
 
 export Subspace, IsotropicSubspace, LagrangianSubspace
