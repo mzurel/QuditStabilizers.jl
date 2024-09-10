@@ -580,7 +580,7 @@ function SYMPLECTICImproved(n, d, i)
 
     # Step 4
     b = FF(i ÷ s)
-    b⃗ = digits(i ÷ s, base = d)[2:(2n-1)]
+    b⃗ = digits(i ÷ s, base = d, pad = 2n - 1)[2:(2n-1)]
 
     # Step 5
     ẽ₁ = zero(MM) + 1
@@ -599,13 +599,21 @@ function SYMPLECTICImproved(n, d, i)
 
     # Step 7
     if n == 1
-        return SymplecticMap{n, d}([f₁], [f₂])
+        return SymplecticMap{n, d}([f₁], [f₂], check=false)
     else
         B₍ₙ₋₁₎ = SYMPLECTICImproved(n-1, d, BigInt(floor((i ÷ s) / BigInt(d)^(2n-1))))
         Bₙ = SymplecticMap{n, d}(
             [transvection(vcat(T, T̃), v) for v ∈ [e₁, extendfront.(B₍ₙ₋₁₎.z_image)...]],
             [transvection(vcat(T, T̃), v) for v ∈ [e₂, extendfront.(B₍ₙ₋₁₎.x_image)...]]
-        )
+        , check=false)
         return Bₙ
     end
+end
+
+function rand(rng::AbstractRNG, ::SamplerType{SymplecticMap{n, d}}) where {n, d}
+    return SYMPLECTICImproved(n, d, rand(1:symplecticgrouporder(n, d)))
+end
+
+function rand(rng::AbstractRNG, ::SamplerType{SymplecticMap{n, d}}, dims...) where {n, d}
+    return SYMPLECTICImproved.(n, d, rand(1:symplecticgrouporder(n, d), dims...))
 end
