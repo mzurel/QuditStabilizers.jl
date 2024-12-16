@@ -63,3 +63,38 @@ function operator(P::Pauli{n, d}) where {n, d}
     op = ω^Integer(lift(ZZ, P.ϕ - ((transpose(P.a.z) * P.a.x)[1] / 2))) * op
     return op
 end
+
+
+struct Clifford{n, d}
+    S::SymplecticMap{n, d}
+    a::SymplecticVector{n, d}
+    function Clifford{n, d}(S::SymplecticMap{n, d}, a::SymplecticVector{n, d}) where {n, d}
+        new(S, a)
+    end
+end
+
+function hash(C::Clifford{n, d}) where {n, d}
+    return hash((C.S, S.a))
+end
+
+function rand(rng::AbstractRNG, ::SamplerType{Clifford{n, d}}) where {n, d}
+    return Clifford{n, d}(rand(SymplecticMap{n, d}), rand(SymplecticVectir{n, d}))
+end
+
+function *(C::Clifford{n, d}, P::Pauli{n, d}) where {n, d}
+    return Pauli{n, d}(C.S * P.a, P.ϕ + (C.a ⋆ P.a))
+end
+
+
+struct StabilizerState{n, d}
+    I::LagrangianSubspace{n, d}
+    r::Vector{FqFieldElem}
+end
+
+function hash(σ::StabilizerState{n, d}) where {n, d}
+    return hash((σ.I, σ.r))
+end
+
+function rand(rng::AbstractRNG, ::SamplerType{StabilizerState{n, d}}) where {n, d}
+    return StabilizerState{n, d}(rand(LagrangianSubspace{n, d}), rand(finite_field(d)[1], n))
+end

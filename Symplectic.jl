@@ -617,3 +617,13 @@ end
 function rand(rng::AbstractRNG, ::SamplerType{SymplecticMap{n, d}}, dims...) where {n, d}
     return SYMPLECTICImproved.(n, d, rand(1:symplecticgrouporder(n, d), dims...))
 end
+
+function rand(rng::AbstractRNG, ::SamplerType{LagrangianSubspace{n, d}}) where {n, d}
+    map = rand(SymplecticMap{n, d})
+    return LagrangianSubspace{n, d}(map.z_image, check=false)
+end
+
+function rand(rng::AbstractRNG, ::SamplerType{IsotropicSubspace{n, d}}) where {n, d}
+    map = rand(SymplecticMap{n, d})
+    return IsotropicSubspace{n, d}(map.z_image[1:dimension], check=false)
+end
