@@ -8,7 +8,7 @@ using LinearAlgebra
 using Kronecker
 using Nemo
 
-import Base: (==), (+), (-), (*), hash, isequal, iszero, show, rand, zero
+import Base: (==), (+), (-), (*), hash, isequal, iszero, show, rand, zero, collect
 import Random: AbstractRNG, SamplerType
 
 export SymplecticVector, SymplecticSubspace
@@ -16,7 +16,7 @@ export dimension, halfdimension, data, extend, extendfront
 export innerproduct, (⋅), symplecticform, (⋆)
 
 export Subspace, IsotropicSubspace, LagrangianSubspace
-export islinearlyindependent, isisotropic
+export islinearlyindependent, isisotropic, collect, symplecticcomplement
 
 export SymplecticMap, Transvection
 export symplecticgrouporder, issymplectic, symplecticmap, (*)
