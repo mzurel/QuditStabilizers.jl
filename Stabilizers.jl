@@ -52,7 +52,7 @@ end
 
 
 function operator(P::Pauli{n, d}) where {n, d}
-    ω = exp(2.0im * π / 3)
+    ω = exp(2.0im * π / d)
     Z = diagm([ω^k for k ∈ 0:(d-1)])
     X = diagm(-1=>ones(ComplexF64, d-1), d-1=>ones(ComplexF64, 1))
 
@@ -74,11 +74,11 @@ struct Clifford{n, d}
 end
 
 function hash(C::Clifford{n, d}) where {n, d}
-    return hash((C.S, S.a))
+    return hash((C.S, C.a))
 end
 
 function rand(rng::AbstractRNG, ::SamplerType{Clifford{n, d}}) where {n, d}
-    return Clifford{n, d}(rand(SymplecticMap{n, d}), rand(SymplecticVectir{n, d}))
+    return Clifford{n, d}(rand(SymplecticMap{n, d}), rand(SymplecticVector{n, d}))
 end
 
 function *(C::Clifford{n, d}, P::Pauli{n, d}) where {n, d}

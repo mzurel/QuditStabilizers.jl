@@ -789,6 +789,6 @@ function rand(rng::AbstractRNG, ::SamplerType{SymplecticMap{n, d}}, dims...) whe
 end
 
 function rand(rng::AbstractRNG, ::SamplerType{LagrangianSubspace{n, d}}) where {n, d}
-    map = rand(SymplecticMap{n, d})
-    return LagrangianSubspace{n, d}(map.z_image, check=false)
+    smap = rand(SymplecticMap{n, d})
+    return LagrangianSubspace{n, d}(smap.z_image, check=false)
 end
